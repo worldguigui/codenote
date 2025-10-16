@@ -1,7 +1,36 @@
 # antlr 4的部署与快速入门
 
 ### 对于idea来说
-针对于Intellij Idea的antlr4的安装部署十分简单, 在Settings->Plugins->marketplace中直接搜索antlr v4并安装, 随后跟着提示重启ide即可.
+针对于Intellij Idea的antlr4的安装部署十分简单, 在Settings->Plugins->marketplace中直接搜索antlr v4并安装, 随后跟着提示重启ide.
+得益于maven强大的项目管理功能, 我们接下来在pom.xml中直接引入依赖即可.
+```
+<dependencies>
+        <!-- https://mvnrepository.com/artifact/org.antlr/antlr4-runtime -->
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.13.1</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <version>4.9.3</version>
+                <executions>
+                    <execution>
+                        <id>antlr</id>
+                        <goals>
+                            <goal>antlr4</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+```
 ### 对于windows来说, 稍稍复杂一点
 对于windows来说,如果你想在命令行中进行antlr4的使用的话.
 1. 从antlr的官网上下载jar包--antlr-4.13.2-complete.jar
