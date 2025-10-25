@@ -90,7 +90,19 @@ DIGIT: [0-9] ;<br/>
 
 被fragment标记的词法规则，fragent会告诉antlr这条规则只能被其他规则使用，不用被分析。<br/>
 
-### 6.带动作的规则
+### 6.词法分析器的指令
+词法分析器中有一些特殊的指令，允许我们对匹配到的字符进行一些不一样的操作。<br/>
+```
+// WS: [ \t\n\r]+ -> skip ;
+// 作用：匹配所有空白字符，并丢弃不做处理
+// 
+//
+// WS: [ \r\t\u000C\n]+ -> channel(HIDDEN) ;
+// 作用： 匹配所有空白字符，并将它们放入隐藏通道中，但并不丢弃。语法分析器只处理一个通道，这些被隐藏的字符会被保留下来。
+//
+//
+```
+### 7.带动作的规则
 
 
 ## 二.如何编写Java应用程序
@@ -106,6 +118,11 @@ ID: [a-zA-Z]+ ;
 INT: [1-9][0-9]* ;
 
 // 这是一个简单的java程序实现
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.tree.*;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 class Main{
     public static void main(String[] args) {
         ANTLRInputStream input = new ANTLRInputStream(System.in); // 接受用户输入
@@ -126,6 +143,61 @@ antlr的自动化工具会根据规则帮助我们生成上下文对象--Context
 ### 3.监听者模式遍历
 当某一事件发生，绑定在其身上的监听器就会被触发，进而调用回调函数，这就是监听模式的大概思路。<br/>
 antlr根据每个规则，为我们生成了对应的enter()和exit()方法，以对应的Context对象为参数，并将它们包装在默认实现的ExprBaseListener中。如enterAssign()和exitAssign()，分别在进入和离开assign时触发，并以AssignContext作为传参。<br/>
+```
+// 这是antlr为我们生成的默认实现：什么都不做
+public class ExprBaseListener implements ExprListener {
+/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterStat(ExprParser.StatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitStat(ExprParser.StatContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+}
 
+// 如何开启监听模式
+ParseTree tree = parser.stat();
+ParseTreeWalker = walker = new ParsrTreeWalker(); // 新建一个标准的遍历器
+walker.walk(new ExprBaseListener(),tree); // 使用监听器初始化对语法分析树的遍历
+
+```
 
 ### 4.访问者模式遍历
+访问者模式有些复杂，antlr为我们自动生成访问子树的方法，如visitExpr()，visitStat()，并将它们封装在ExprBaseVisitor类中。<br/>
+访问器会在根节点处调用visitStat()方法，接下来，visitStat()方法的实现将会调用visit()方法，并将所有子节点当做参数传递给它，从而继续遍历的过程。<br/>
+```
+// 这是antlr为我们生成的默认实现：什么都不做
+public class ExprBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements ExprVisitor<T> {
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitStat(ExprParser.StatContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitAssign(ExprParser.AssignContext ctx) { return visitChildren(ctx); }
+}
+
+// 如何开启访问者模式
+ParseTree tree = parser.stat();
+ExprBaseVisitor v = new ExprBaseVisitor();
+v.visit(tree);
+```
+### 5.更好地遍历
+感谢antlr工具包，我们在具体实现时不必先去找顶层的抽象接口，再implements了。创建自己的类，然后继承对应的默认实现，针对性地覆盖父类方法即可。<br/>
