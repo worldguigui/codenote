@@ -65,7 +65,17 @@ ID: ('a'..'z' | 'A'..'Z')+ ;<br/>
 .*? 表示非贪婪匹配<br/>
 <br/>
 
-### 3.带标签的规则
+### 3.带有歧义的规则
+带有歧义的规则，很好理解，加入对于同一段文本，它可以同时匹配备选规则1和备选规则2，那么这时候会发生什么？
+```
+grammar Diff.g4<br/>
+stat: 'if'<br/>
+| [a-zA-Z]+<br/>
+;<br/>
+```
+antlr采取的策略是优先匹配靠前的备选分支，比如说，对于语句if，antlr会匹配第一个备选分支'if'，而不是[a-zA-Z]+
+
+### 4.带标签的规则
 GENDER: 'MALE'    # Male<br/>
       | 'FEMALE'  # Female<br/>
       |           # Empty<br/>
@@ -73,7 +83,7 @@ GENDER: 'MALE'    # Male<br/>
 当我们想知道规则具体匹配到哪个分支的时候，我们就可以在分支后面通过#来添加标签，将大的规则拆分为多个小的规则，每个小规则都有对应的名称。<br/>
 <br/>
 
-### 4.带递归的规则
+### 5.带递归的规则
 expr: expr ('*' |'/') expr<br/>
     | INT ;<br/>
 或<br/>
@@ -84,13 +94,13 @@ mul: expr ('*' |'/') expr<br/>
 
 antlr可以处理直接左递归(前一个)，但却无法处理间接右递归(后一个)。<br/>
 
-### 5.带fragent的规则
+### 6.带fragent的规则
 fragment<br/>
 DIGIT: [0-9] ;<br/>
 
 被fragment标记的词法规则，fragent会告诉antlr这条规则只能被其他规则使用，不用被分析。<br/>
 
-### 6.词法分析器的指令
+### 7.词法分析器的指令
 词法分析器中有一些特殊的指令，允许我们对匹配到的字符进行一些不一样的操作。<br/>
 ```
 // WS: [ \t\n\r]+ -> skip ;
@@ -102,15 +112,6 @@ DIGIT: [0-9] ;<br/>
 //
 //
 ```
-### 7.带有歧义的规则
-带有歧义的规则，很好理解，加入对于同一段文本，它可以同时匹配备选规则1和备选规则2，那么这时候会发生什么？
-```
-grammar Diff.g4<br/>
-stat: 'if'<br/>
-| [a-zA-Z]+<br/>
-;<br/>
-```
-antlr采取的策略是优先匹配靠前的备选分支，比如说，对于语句if，antlr会匹配第一个备选分支'if'，而不是[a-zA-Z]+
 
 ## 二.如何编写Java应用程序
 ### 1.简单的实现
@@ -133,10 +134,10 @@ import java.io.OutputStream;
 class Main{
     public static void main(String[] args) {
         ANTLRInputStream input = new ANTLRInputStream(System.in); // 接受用户输入
-		ExprLexer lexer = new ExprLexer(input);
-		CommonTokenStream tokens = new CommonTokenStream(lexer);
-		ExprParser parser = new ExprParser(tokens);
-		ParseTree tree = parser.stat();
+		ExprLexer lexer = new ExprLexer(input); // 创建词法分析器
+		CommonTokenStream tokens = new CommonTokenStream(lexer); // 将词法分析器处理的token放入缓冲流中
+		ExprParser parser = new ExprParser(tokens); // 创建语法分析器
+		ParseTree tree = parser.stat(); // 语法分析器需要一个起点，也就是根节点，这里是stat规则
 		System.out.println(tree.toStringTree(parser));
     }
 }
