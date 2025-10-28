@@ -31,6 +31,40 @@
         </plugins>
     </build>
 ```
+编写g4文件，右键选中该g4文件，点击**Generate ANTLR Recognizer**，antlr4的自动化工具会把相关的类创建在文件夹**gen**中。<br/>
+编写Main文件，然后运行，在控制台窗口输入"hello world^D"(最后那个是终止符，根据你的系统而定，idea一般是ctrl+D)<br/>
+不出意外的话，你会看到很简洁的输出，没有报错。<br/>
+当然如果你成功配置了ANTLR的话，你会很轻松的完成这一切。<br/>
+```
+// g4文件
+grammar Hello;
+r : 'hello' ID ;
+ID : [a-z]+ ;
+WS : [ \t\r\n]+ -> skip ;
+
+// Main测试类
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.tree.*;
+import org.example.Hello.g4.HelloLexer;
+import org.example.Hello.g4.HelloParser;
+
+import java.io.IOException;
+class Main{
+    public static void main(String[] args) throws IOException {
+
+        ANTLRInputStream input = new ANTLRInputStream(System.in);
+        HelloLexer lexer = new HelloLexer(input);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        HelloParser parser = new HelloParser(tokens);
+        ParseTree tree = parser.r();
+
+        System.out.println(tree.toStringTree(parser));
+    }
+}
+
+// 输出
+(r hello world)
+```
 ### 对于windows来说, 稍稍复杂一点
 对于windows来说,如果你想在命令行中进行antlr4的使用的话.<br/>
 1. 从antlr的官网上下载jar包--antlr-4.13.2-complete.jar
@@ -90,3 +124,5 @@ hello java
 
 每行输出代表了一个词法符号, 其中包含了该词法符号的所有信息. <br/>
 [@0,0:4='hello',<'hello'>,1:0] 表示 这个词法符号位于第一个位置(从0开始计数), 由输入文本的第0个到第4个位置之间的字符组成, 包含的文本内容是'hello', 词法类型是'hello', 位于输出文本的第1行, 第0个位置开始.<br/>
+
+**你已经初步入门antlr4了，快去自己试试吧**
