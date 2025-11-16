@@ -1,7 +1,24 @@
 在学习antlr4的使用时，我被建议去了解一下lambda演算，以下是我对教材内容的总结。<br/>
 
 ## 一.什么是lambda演算？
+这里只进行原文的摘录和翻译。<br/>
+Functions play a prominent role in describing the semantics of a programming language, since the meaning of a computer program can be considered as a function from input values to output values. In addition, functions play an essential role in mathematics, which means that much of the theory of functions, including the issue of computability, unfolded as part of mathematical logic before the advent of computers. In particular, Alonzo Church developed the lambda calculus in the 1930s as a theory of functions that provides rules for manipulating functions in a purely syntactic manner. <br/>
+函数在描述编程语言的语义中扮演着重要角色，因为计算机程序的含义可以被视为一个从输入值到输出值的函数。此外，函数在数学中也扮演着关键角色，这意味着函数的许多理论，包括可计算性问题，在计算机出现之前是作为数理逻辑的一部分展开的。特别是，阿隆佐·邱奇在 20 世纪 30 年代发展了 λ 演算，作为一种函数理论，它提供了以纯句法方式操作函数的规则。<br/>
 
+Although the lambda calculus arose as a branch of mathematical logic to provide a foundation for mathematics, it has led to considerable ramiﬁcations in the theory of programming languages. Beyond the inﬂuence of the lambda calculus in the area of computation theory, it has contributed important results to the formal semantics of programming languages: <br/>
+尽管 λ 演算作为数理逻辑的一个分支出现，旨在为数学奠定基础，但它对编程语言理论产生了深远的影响。除了 λ 演算在计算理论领域的影响之外，它还为编程语言的形式语义学贡献了重要成果：<br/>
+
+• Although the lambda calculus has the power to represent all computable functions, its uncomplicated syntax and semantics provide an excellent vehicle for studying the meaning of programming language concepts. <br/>
+• 尽管 λ 演算有能力表示所有可计算函数，但其简单的语法和语义为研究编程语言概念的含义提供了一个极好的工具。<br/>
+
+• All functional programming languages can be viewed as syntactic variations of the lambda calculus, so that both their semantics and implementation can be analyzed in the context of the lambda calculus. <br/>
+• 所有函数式编程语言都可以被视为 λ 演算的句法变体，因此它们的语义和实现都可以在 λ 演算的背景下进行分析。<br/>
+
+• Denotational semantics, one of the foremost methods of formal speciﬁcation of languages, grew out of research in the lambda calculus and expresses its deﬁnitions using the higher-order functions of the lambda calculus. <br/>
+• 指称语义，语言形式规范的最重要方法之一，源于 λ 演算的研究，并使用 λ 演算的高阶函数来表达其定义。<br/>
+
+In this chapter we take a brief but careful look at the lambda calculus, ﬁrst deﬁning it as a language and then viewing it as a computational formalism in light of its reduction rules. We end the chapter by implementing a lambda calculus evaluator in Prolog. In Chapter 10 we continue the study of functions with the goal of explaining recursive deﬁnitions. <br/>
+在本章中，我们将简要而仔细地探讨 λ 演算，首先将其定义为一门语言，然后根据其归约规则将其视为一种计算形式体系。我们将在 Prolog 中实现一个 λ 演算求值器来结束本章。在第 10 章中，我们将继续研究函数，目标是解释递归定义。<br/>
 ## 二.lambda的语法
 ```
 <expression> ::= <variable> ; lowercase identifiers
@@ -137,7 +154,14 @@ Example : (λy . (λf . f x) y)[x→f y]
 ③这里 **E = (λy. add x y)， Arg = 2**。<br/>
 ④结果：**(λy. add 2 y) 3**。<br/>
 接下来就是以同样的步骤，继续识别可归约式、计算，直到不可β归约为止。<br/>
-
+为了在 λ 表达式上定义"相等"关系，我们也允许 β-归约规则反向工作。<br/>
+定义：反转 β-归约产生 β-抽象规则，**E[v→E1] ⇒ β (λv . E) E1**。<br/>
+比如说：<br/>
+正向β-归约： **(λv . E) E1 ⇒β E[v→E1]**。<br/>
+这是计算的方向，将函数调用简化。<br/>
+反向β-归约（β-抽象）： **E[v→E1] ⇒β (λv . E) E1**。<br/>
+这是构造的方向，将表达式复杂化，包装成一个函数调用。<br/>
+因为有了正向与反向的β归约，我们可以说 **(λv . E) E1** 和 **β E[v→E1]**，是相等的。<br/>
 ### 3.η归约
 作用：去掉多余的绑定变量。<br/>
 因为在lambda表达式中，两个函数如果对所有的输入都产生相同的输出，那么它们就是同一个函数。基于此，我们可以进行η归约。<br/>
@@ -151,8 +175,12 @@ Example : (λy . (λf . f x) y)[x→f y]
 定义：如果 λ 演算有预定义常量（即，如果它不是纯的），与那些预定义值和函数相关的规则被称为 δ 规则。这就相当于把具体的x=1值带入到f(x)=x+1函数中，然后得到了f(x)=2。<br/>
 例如，**(add 3 5) ⇒ δ 8** 和 **(not true) ⇒ δ false**。<br/>
 
+### 5.树形结构
+我们在进行lambda表达式的归约时，最重要的是寻找β可归约式，它可以是如下所示的树形结构。<br/>
+<img width="207" height="108" alt="image" src="https://github.com/user-attachments/assets/0aa42c6e-a510-4b3e-ba82-91b8ca6bfca8" /><br/>
+
 ## 六.归约策略
-这一节主要解决一个问题：当表达式中有多个可归约式时，我们应该先归约哪一个？<img width="207" height="108" alt="image" src="https://github.com/user-attachments/assets/0aa42c6e-a510-4b3e-ba82-91b8ca6bfca8" /><br/>
+这一节主要解决一个问题：当表达式中有多个可归约式时，我们应该先归约哪一个？<br/>
 在回答这个问题之前，我们要先明确：操作 λ 表达式的主要目标是将其归约为一个"最简单的形式"，并将其视为 λ 表达式的值。<br/>
 定义：如果 λ 表达式不包含 β-可归约式（在应用 λ 演算中也不包含 δ-规则），则它处于规范形式，因此无法使用 β-规则或 δ-规则进一步归约。<br/>
 规范形式和归约策略的概念可以通过提出四个问题来研究：<br/>
@@ -242,3 +270,15 @@ Church-Rosser 定理Ⅱ指出规范序归约将产生规范形式 λ 表达式�
 <br/>
 1. 按名调用与规范序归约相同，除了在抽象（函数体）内的 λ 表达式中的可归约式不会被归约。使用按名调用时，实际参数作为未求值的表达式传递，每次引用相应的形式参数时，在执行函数的函数体中对它进行求值。通过选择最左边的可归约式来确保规范序，该可归约式始终是一个具有未求值操作数的最外层可归约式。<br/>
 2. 按值调用与应用序归约相同，除了在抽象内的 λ 表达式中的可归约式不会被归约。这个限制对应于一个原则：函数体在函数被调用（在 β-归约中）之前不会被求值。应用序意味着函数的参数在函数被应用之前被求值。<br/>
+```
+Example : The call by value reduction of
+(λx . (λf . f (succ x)) (λz . (λg . (λy . (add (mul (g y) x)) z)))) ((λz . (add z 3)) 5)
+proceeds as follows:
+(λx . (λf . f (succ x)) (λz . (λg . (λy . (add (mul (g y) x))) z))) ((λz . (add z 3)) 5)
+⇒β (λx . (λf . f (succ x)) (λz . (λg . (λy . (add (mul (g y) x))) z))) (add 5 3 )
+⇒δ (λx . (λf . f (succ x)) (λz . (λg . (λy . (add (mul (g y) x))) z))) 8
+⇒β (λf . f (succ 8)) (λz . ( λg . ( λy . (add (mul (g y) 8))) z))
+⇒β (λz . (λg . (λy . (add (mul (g y) 8))) z)) (succ 8 )
+⇒δ (λz . (λg . (λy . (add (mul (g y) 8))) z)) 9
+⇒β (λg . (λy . (add (mul (g y) 8))) 9)
+```
