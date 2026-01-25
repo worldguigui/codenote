@@ -72,6 +72,6 @@ public class SerializableDemo {
 
 ## 二.BitSet源码-设计思想
 BitSet 使用 long[] 来存储数据，1 个 long 占据 64 bit ，可以用来表示 64 个 0 或 1。<br/>
+|neirong|neirong|
 |:-----|:------|
-|高64位|neirong|
-|:------|:------|
+|neirong|neirong|
