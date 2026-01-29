@@ -18,7 +18,7 @@ serialVersionUID 是特例，序列化时会保存在文本流中。<br/>
 除了静态变量以外，还可以通过关键字 transient ，来排除修饰的变量，使其不会被序列化。<br/>
 
 示例代码：
-```
+```java
 import java.io.*;
 
 // 实现Serializable接口，标记该类可以被序列化
@@ -82,7 +82,7 @@ BitSet 使用 long[] 来存储数据，1 个 long 占据 64 bit ，可以用来�
 该表表示BitSet的191位、94\~64位、7\~0位为1。<br/>
 
 ### 2.静态量
-```
+```java
 private static final int ADDRESS_BITS_PER_WORD = 6;
  
 private static final int BITS_PER_WORD = 1 << ADDRESS_BITS_PER_WORD;
@@ -108,7 +108,7 @@ private static final long serialVersionUID = 7997698588986878753L;
 可以用 BIT_INDEX_MASK & 150 来计算，这实际上就是取模运算。<br/>
 
 ### 3.变量
-```
+```java
 /**
  * The internal field corresponding to the serialField "bits".
  */
@@ -132,7 +132,7 @@ private transient boolean sizeIsSticky = false;
 |sizeIsSticky|标记数组大小是否用户指定。|
 
 ### 4.构造方法
-```
+```java
 public BitSet() {
     initWords(BITS_PER_WORD);
     sizeIsSticky = false;
@@ -185,7 +185,7 @@ BitSet提供了三种构造方法。<br/>
 方法 wordIndex(int bitIndex)，根据 bitIndex 计算它的绝对索引。<br/>
 
 ### 5.查询方法
-```
+```java
 /**
  * Returns the value of the bit with the specified index. The value
  * is {@code true} if the bit with the index {@code bitIndex}
@@ -231,7 +231,7 @@ set 置一、 clear 置零、flip 取反。<br/>
 如果在逻辑长度外置零，wordsInUse 不改变；若在逻辑长度之内置零，则可能减少。<br/>
 如果是取反和范围操作，则要视情况而定。<br/>
 ### 7.set方法
-```
+```java
 /**
  * Sets the bit at the specified index to {@code true}.
  *
