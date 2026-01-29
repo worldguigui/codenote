@@ -41,7 +41,8 @@ grammar Hello;
 r : 'hello' ID ;
 ID : [a-z]+ ;
 WS : [ \t\r\n]+ -> skip ;
-
+```
+```java
 // Main测试类
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
@@ -63,7 +64,7 @@ class Main{
 }
 
 // 输出
-(r hello world)
+// (r hello world)
 ```
 ### 对于windows来说, 稍稍复杂一点
 对于windows来说,如果你想在命令行中进行antlr4的使用的话.<br/>
