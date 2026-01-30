@@ -171,7 +171,7 @@ public String chat(String message) {
 // 手动装配
 @AiService(
         wiringMode = AiServiceWiringMode.EXPLICIT,       // 手动装配，默认为自动装配
-        chatModel = "deepseek-chat"
+        chatModel = "openAiChatModel"
 )
 
 // 自动装配
@@ -186,3 +186,100 @@ public interface AiNoteService {
     public String chat(String msg);
 }
 ```
+
+### 5.流式调用
+#### 1）引入依赖
+为了能够正确接收并处理流式调用下的响应，我们要引入两个新的依赖。
+```
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-webflux</artifactId>
+</dependency>
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-reactor</artifactId>
+    <version>1.0.1-beta6</version>
+</dependency>
+```
+#### 2）配置流式模型对象
+```java
+langchain4j:
+  open-ai:
+    chat-model:
+      base-url: "https://api.deepseek.com"
+      api-key: sk-2b73b5fe82c94e168a14f138b7719010
+      model-name: deepseek-chat
+    streaming-chat-model:
+      base-url: "https://api.deepseek.com"
+      api-key: sk-2b73b5fe82c94e168a14f138b7719010
+      model-name: deepseek-chat
+
+@AiService(
+        wiringMode = AiServiceWiringMode.EXPLICIT,       // 手动装配，默认为自动装配
+        chatModel = "openAiChatModel",
+        streamingChatModel = "openAiStreamingChatModel"
+)
+```
+#### 3）切换接口中方法的返回值类型
+将 String 修改为 Flux<String>，用来接收流式响应数据。
+```java
+public interface AiNoteService {
+
+    /**
+     * 聊天方法
+     * @param msg
+     * @return
+     */
+    public Flux<String> chat(String msg);
+}
+```
+#### 4）修改controller中的代码
+修改相应的代码，并将编码设置为 utf-8，以免出现乱码。
+```java
+@RequestMapping(value = "/chat", produces = "text/html;charset=utf-8")
+public Flux<String> chat(String message) {
+    // 流式调用
+    Flux<String> result = aiNoteService.chat(message);
+    return result;
+}
+```
+
+### 6.消息注解
+#### 1）@SystemMessage
+langchain4j 的 AiService 为我们提供了两个消息注解，@SystemMessage 和 @UserMessage，可以让我们基于注解为会话添加消息。<br/>
+
+如果预设的提示词太长，可以将其写入到外部 txt 文件中，把文件放入到 resourses 目录下，并在注解中指定该外部文件。<br/>
+
+```java
+// 直接写明提示词 和 提示词写入到外部文件，再传递给注解。
+public interface AiNoteService {
+
+    /**
+     * 聊天方法
+     * @param msg
+     * @return
+     */
+    @SystemMessage("你是我的好朋友小明，一个魔幻世界中的狡猾的地精商人")
+    @SystemMessage(fromResource = "system.txt")
+    public Flux<String> chat(String msg);
+}
+```
+
+#### 2）@UserMessage
+@UserMessage 注解会将内容直接附加到用户对话前。<br/>
+
+通常硬性要求使用 {{it}}，但也可以使用 @V 指定其他的变量名。<br/>
+
+```java
+public interface AiNoteService {
+    @UserMessage("你是我的好朋友小明，{{it}}")
+    public Flux<String> chat(String message);
+}
+
+public interface AiNoteService {
+    @UserMessage("你是我的好朋友小明，{{msg}}")
+    public Flux<String> chat(@V("msg") String message);
+}
+```
+
+### 7.会话记忆
