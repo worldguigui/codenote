@@ -472,3 +472,295 @@ public class CommonConfig {
     }
 }
 ```
+### 10.RAG快速入门
+RAG 分为两部分，一是如何将数据存储到向量数据库，二是如果从向量数据库中检索数据。
+#### 1）引入依赖
+```
+<!-- ease rag -->
+<dependency>
+  <groupId>dev.langchain4j</groupId>
+  <artifactId>langchain4j-easy-rag</artifactId>
+  <version>1.0.1-beta6</version>
+</dependency>
+```
+#### 2）加载知识数据文档
+#### 3）构建向量数据库操作对象
+```java
+@Configuration
+public class CommonConfig {
+
+    /**
+     * 构建向量数据库操作对象
+     * @return
+     */
+    @Bean
+    public EmbeddingStore store() {
+        // 1.加载文档进内存
+        List<Document> documents = ClassPathDocumentLoader.loadDocuments("content");
+        // 2.构建向量数据库操作对象
+        InMemoryEmbeddingStore store = new InMemoryEmbeddingStore();
+        // 3.构建一个 EmbeddingStoreIngestor 对象，完成文本数据切割，向量化，存储
+        EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
+                .embeddingStore(store)
+                .build();
+
+        ingestor.ingest(documents);
+        return store;
+    }
+}
+```
+#### 4）把文档切割、向量化并存储到向量数据库中
+在快速入门这一节中，这部分操作 langchain4j 已经为我们封装好了。
+#### 5）构建向量数据库检索对象
+```java
+@Configuration
+public class CommonConfig {
+
+    /**
+     * 构建向量数据库检索对象
+     * @param store
+     * @return
+     */
+    @Bean
+    public ContentRetriever contentRetriever(EmbeddingStore store) {
+        return EmbeddingStoreContentRetriever.builder()
+                .embeddingStore(store)
+                .minScore(0.5)
+                .maxResults(3)
+                .build();
+    }
+}
+```
+#### 6）配置向量数据库检索对象
+```java
+@AiService(
+        wiringMode = AiServiceWiringMode.EXPLICIT,       // 手动装配，默认为自动装配
+        chatModel = "openAiChatModel",
+        streamingChatModel = "openAiStreamingChatModel",
+        chatMemory = "chatMemory",
+        chatMemoryProvider = "chatMemoryProvider",
+        contentRetriever = "contentRetriever"
+)
+```
+
+### 11.RAG知识库-核心API
+rag 技术的实现流程可以分为：Document Loader（文档加载器） -> Document Parser（文档解析器） -> Document Splitter（文档分割器） -> EmbeddingModel（向量模型） -> EmbeddingStore（向量数据库操作对象）。
+#### 1）文档加载器
+从不同来源获取外部文档，将其加载到内存中。
+```java
+// 相对于类路径加载
+List<Document> documents = ClassPathDocumentLoader.loadDocuments("content");
+// 根据磁盘绝对路径加载
+List<Document> documents = FileSystemDocumentLoader.loadDocuments("E://");
+// 根据url路径加载
+List<Document> documents = UrlDocumentLoader.load("http://");
+// ...
+```
+#### 2）文本解析器
+对加载到内存中不同类型的文档进行解析，把非纯文本转化为纯文本。
+```java
+// 引入依赖
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-document-parser-apache-pdfbox</artifactId>
+    <version>1.0.1-beta6</version>
+</dependency>
+
+// TextDocumentParser，解析纯文本格式的文件
+// ApachePdfBoxDocumentParser，解析pdf格式文件
+// ApachePoiDocumentParser，解析微软的office文件，例如DOC、PPT、XLS
+// ApacheTikaDocumentParser（默认），几乎可以解析所有格式的文件
+List<Document> documents = ClassPathDocumentLoader.loadDocuments("content"，new ApachePdfBoxDocumentParser());
+```
+#### 3）文本分割器
+对解析后的文档进行分割，切割成一个一个的小片段。<br/>
+
+DocumentSplitters.recursive()（默认），递归分割器，优先段落分割，再按照行分割，再按照句子分割，再按照词分割。<br/>
+
+```java
+@Configuration
+public class CommonConfig {
+
+    /**
+     * 构建向量数据库操作对象
+     * @return
+     */
+    @Bean
+    public EmbeddingStore store() {
+        // 1.加载文档进内存
+        List<Document> documents = ClassPathDocumentLoader.loadDocuments("content");
+        // 2.构建向量数据库操作对象
+        InMemoryEmbeddingStore store = new InMemoryEmbeddingStore();
+        
+        // 构建文档切割器对象
+        DocumentSplitter ds = DocumentSplitters.recursive(500,100);
+        // 3.构建一个 EmbeddingStoreIngestor 对象，完成文本数据切割，向量化，存储
+        EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
+                .embeddingStore(store)
+                .documentSplitter(ds)
+                .build();
+
+        ingestor.ingest(documents);
+        return store;
+    }
+}
+
+```
+#### 4）向量模型
+用于把切割后的片段向量化。
+
+```java
+// 
+langchain4j:
+  open-ai:
+    embedding-model:
+      base-url: 
+      api-key: 
+      model-name: 
+      log-responses: true
+      log-requests: true
+
+@Configuration
+public class CommonConfig {
+
+    @Autowired
+    private EmbeddingModel embeddingModel;
+
+    /**
+     * 构建向量数据库操作对象
+     * @return
+     */
+    @Bean
+    public EmbeddingStore store() {
+        // 1.加载文档进内存
+        List<Document> documents = ClassPathDocumentLoader.loadDocuments("content");
+        // 2.构建向量数据库操作对象
+        InMemoryEmbeddingStore store = new InMemoryEmbeddingStore();
+
+        // 构建文档切割器对象
+        DocumentSplitter ds = DocumentSplitters.recursive(500,100);
+        // 3.构建一个 EmbeddingStoreIngestor 对象，完成文本数据切割，向量化，存储
+        EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
+                .embeddingStore(store)
+                .documentSplitter(ds)
+                .embeddingModel(embeddingModel)  // 在这里完成配置
+                .build();
+
+        ingestor.ingest(documents);
+        return store;
+    }
+
+    /**
+     * 构建向量数据库检索对象
+     * @param store
+     * @return
+     */
+    @Bean
+    public ContentRetriever contentRetriever(EmbeddingStore store) {
+        return EmbeddingStoreContentRetriever.builder()
+                .embeddingStore(store)
+                .minScore(0.5)
+                .maxResults(3)
+                .embeddingModel(embeddingModel)  // 在这里完成配置
+                .build();
+    }
+}
+```
+### 5）向量数据库操作对象
+用于操作向量数据库（添加、检索）
+```java
+// 引入依赖
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-community-redis-spring-boot-starter</artifactId>
+    <version>1.0.1-beta6</version>
+</dependency>
+
+// 配置向量数据库信息
+langchain4j:
+  open-ai:
+    community:
+      redis:
+        host:localhost
+        port:6379
+
+// 注入 RedisEmbeddingStore 并使用
+@Configuration
+public class CommonConfig {
+
+    @Autowired
+    private EmbeddingModel embeddingModel;
+
+    @Autowired
+    private RedisEmbeddingStore redisEmbeddingStore;
+
+    /**
+     * 构建向量数据库操作对象
+     * @return
+     */
+    @Bean
+    public EmbeddingStore store() {
+        // 1.加载文档进内存
+        List<Document> documents = ClassPathDocumentLoader.loadDocuments("content");
+
+        // 构建文档切割器对象
+        DocumentSplitter ds = DocumentSplitters.recursive(500,100);
+
+        // 3.构建一个 EmbeddingStoreIngestor 对象，完成文本数据切割，向量化，存储
+        EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
+                .embeddingStore(redisEmbeddingStore)  // 在这里完成配置
+                .documentSplitter(ds)
+                .embeddingModel(embeddingModel)
+                .build();
+
+        ingestor.ingest(documents);
+        return store;
+    }
+
+    /**
+     * 构建向量数据库检索对象
+     * @param store
+     * @return
+     */
+    @Bean
+    public ContentRetriever contentRetriever() {
+        return EmbeddingStoreContentRetriever.builder()
+                .embeddingStore(redisEmbeddingStore)  // 在这里完成配置
+                .minScore(0.5)
+                .maxResults(3)
+                .embeddingModel(embeddingModel)
+                .build();
+    }
+}
+```
+### 12.Function Calling
+大模型根据用户请求，调用外部函数或api来完成特定任务。<br/>
+
+这部分 langchain4j 为我们完成了大部分流程的封装，我们只需要写好提示信息即可。<br/>
+
+注解 @Tool 对方法的作用进行描述。<br/>
+注解 @P 对方法的参数进行描述。<br/>
+
+```java
+// 准备工具方法
+@Component
+public class CommonTool{
+    @Autowired
+    private Service service;
+    @Tool("添加用户基本信息")
+    @P("姓名") String name;
+    @P("性别") String gender;
+    @P("电话") String phone;
+    service.insert(new Person(name,gender,phone);
+}
+
+// 配置工具方法
+@AiService(
+        wiringMode = AiServiceWiringMode.EXPLICIT,       // 手动装配，默认为自动装配
+        chatModel = "openAiChatModel",
+        streamingChatModel = "openAiStreamingChatModel",
+        chatMemory = "chatMemory",
+        chatMemoryProvider = "chatMemoryProvider",
+        contentRetriever = "contentRetriever",
+        tools = "commonTool"
+```
