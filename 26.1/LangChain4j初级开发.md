@@ -283,3 +283,192 @@ public interface AiNoteService {
 ```
 
 ### 7.会话记忆
+#### 1）定义会话记忆对象
+调用一次大模型，只会响应这一次的结果。<br/>
+
+想要让大模型拥有记忆，方法就是把上下文一起发送给大模型。<br/>
+```java
+@Configuration
+public class CommonConfig {
+
+    // 构建会话记忆对象
+    @Bean
+    public ChatMemory chatMemory() {
+        MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
+                .maxMessages(20)
+                .build();
+        return chatMemory;
+    }
+}
+
+```
+#### 2）配置会话记忆对象
+```java
+package cn.edu.bjut.ainote.service;
+
+@AiService(
+        wiringMode = AiServiceWiringMode.EXPLICIT,       // 手动装配，默认为自动装配
+        chatModel = "openAiChatModel",
+        streamingChatModel = "openAiStreamingChatModel",
+        chatMemory = "chatMemory"
+)
+```
+
+### 8.会话记忆隔离
+#### 1）定义会话记忆对象提供者
+像前一节一样，使用 MessageWindowChatMemory 来创建会话记忆对象，但是我们这次使用 memoryId 来创建。<br/>
+
+提供者允许我们延迟创建对象。<br/>
+```java
+package cn.edu.bjut.ainote.config;
+
+@Configuration
+public class CommonConfig {
+
+    // 构建会话记忆对象提供者
+    @Bean
+    public ChatMemoryProvider chatMemoryProvider() {
+        ChatMemoryProvider chatMemoryProvider = new ChatMemoryProvider() {
+            @Override
+            public ChatMemory get(Object memoryId) {
+                return MessageWindowChatMemory.builder()
+                        .maxMessages(20)
+                        .chatMemoryStore(chatMemoryStore)
+                        .id(memoryId)
+                        .build();
+            }
+        };
+
+        return chatMemoryProvider;
+    }
+}
+```
+#### 2）配置会话记忆对象提供者
+```java
+@AiService(
+        wiringMode = AiServiceWiringMode.EXPLICIT,       // 手动装配，默认为自动装配
+        chatModel = "openAiChatModel",
+        streamingChatModel = "openAiStreamingChatModel",
+        chatMemory = "chatMemory",
+        chatMemoryProvider = "chatMemoryProvider"
+)
+```
+#### 3）接口方法中添加参数 memoryId
+注解 @MemoryId 用来标志该参数为会话ID。<br/>
+
+注解 @UserMessage 用来标志该参数为用户输入<br/>
+```java
+public interface AiNoteService {
+
+    /**
+     * 聊天方法
+     * @param msg
+     * @return
+     */
+    @SystemMessage(fromResource = "system.txt")
+    public String chat(@MemoryId String memoryId, @UserMessage String msg);
+}
+```
+#### 4）Controller 中 chat 接口接收 memoryId
+```java
+@RestController
+public class ChatController {
+
+    @Autowired
+    private AiNoteService aiNoteService;
+
+    @RequestMapping(value = "/chat", produces = "text/html;charset=utf-8")
+    public String[] chat(String memoryId, String message) {
+        String result = aiNoteService.chat(memoryId,message);
+        String[] split = result.split("\\|");
+        return split;
+    }
+}
+```
+#### 5）前端页面请求时传递 memoryId
+
+### 9.会话记忆持久化
+#### 1）准备 Redis 环境
+#### 2）引入 Redis 起步依赖
+```
+<!-- redis -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+</dependency>
+```
+#### 3）配置 Redis 连接信息
+```
+spring:
+  data:
+    redis:
+      database: 0
+      host: localhost
+      port: 6379
+```
+#### 4）提供 ChatMemoryStore 实现类
+```java
+package cn.edu.bjut.ainote.repository;
+
+import java.time.Duration;
+import java.util.List;
+
+@Repository
+public class RedisChatMemoryStore implements ChatMemoryStore {
+
+    // 注入 RedisTemplate
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Override
+    public List<ChatMessage> getMessages(Object memoryId) {
+        // 获取会话消息
+        String json = stringRedisTemplate.opsForValue().get(memoryId);
+        // 把json字符串转化为List<ChatMessage>
+        List<ChatMessage> list = ChatMessageDeserializer.messagesFromJson(json);
+        return list;
+    }
+
+    @Override
+    public void updateMessages(Object memoryId, List<ChatMessage> list) {
+        // 更新会话消息
+        // 1.把list转化为json数据
+        String json = ChatMessageSerializer.messagesToJson(list);
+        // 2.把json数据存储到redis中
+        stringRedisTemplate.opsForValue().set(memoryId.toString(),json, Duration.ofDays(1));
+
+    }
+
+    @Override
+    public void deleteMessages(Object memoryId) {
+        stringRedisTemplate.delete(memoryId.toString());
+    }
+}
+
+```
+#### 5）配置 ChatMemoryStore
+```java
+@Configuration
+public class CommonConfig {
+
+    @Autowired
+    private ChatMemoryStore chatMemoryStore;
+
+    // 构建会话记忆对象提供者
+    @Bean
+    public ChatMemoryProvider chatMemoryProvider() {
+        ChatMemoryProvider chatMemoryProvider = new ChatMemoryProvider() {
+            @Override
+            public ChatMemory get(Object memoryId) {
+                return MessageWindowChatMemory.builder()
+                        .maxMessages(20)
+                        .chatMemoryStore(chatMemoryStore)
+                        .id(memoryId)
+                        .build();
+            }
+        };
+
+        return chatMemoryProvider;
+    }
+}
+```
