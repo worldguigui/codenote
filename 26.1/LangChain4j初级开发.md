@@ -741,6 +741,7 @@ public class CommonConfig {
 注解 @Tool 对方法的作用进行描述。<br/>
 注解 @P 对方法的参数进行描述。<br/>
 
+示例中的外部函数是我们熟悉的 MySQL 的 CRUD。<br/>
 ```java
 // 准备工具方法
 @Component
