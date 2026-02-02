@@ -627,6 +627,11 @@ print(s.count("l", 5, 10))  # 2（在索引5-10范围内）
 
 print(len(s))               # 17（字符串长度）
 ```
+### 9.Unicode编码
+```python
+print(ord("a"))             # 97
+print(chr(97))              # a
+```
 
 ## 五.面向对象
 ### 1.类定义
