@@ -561,7 +561,10 @@ s2 = "hello world\npython"
 print(s2.split())            # ['hello', 'world', 'python']（默认按空白字符分割）
 print(s2.splitlines())       # ['hello world', 'python']（按行分割）
 
-# 连接
+# + 连接
+print("a" + "b")             # "ab"
+
+# join 连接
 list1 = ['a', 'b', 'c']
 print("-".join(list1))       # "a-b-c"
 
