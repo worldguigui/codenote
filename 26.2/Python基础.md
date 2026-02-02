@@ -9,6 +9,9 @@ age = 25
 price = 19.99
 is_valid = True
 
+// 一次赋值多个变量
+a,b,c = 0,1,2
+
 # 常见数据类型
 int_num = 10        # 整型
 float_num = 3.14    # 浮点型
