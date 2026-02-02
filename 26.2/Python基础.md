@@ -520,7 +520,7 @@ print(s[::-1])    # "gnimmargorP nohtyP"（反转字符串）
 ```
 
 ### 3.字符串大小写转换
-```pythoon
+```python
 s = "Python Programming"
 
 print(s.upper())          # "PYTHON PROGRAMMING"
