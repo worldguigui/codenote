@@ -482,6 +482,116 @@ unique_set = set(duplicates)  # {1, 2, 3, 4, 5}
 unique_list = list(unique_set)  # [1, 2, 3, 4, 5]（注意：顺序可能改变）
 ```
 
+### 5.双端队列（Deque）
+#### 初始化
+```python
+# 创建一个空 deque
+d = deque()
+print(d)  # deque([])
+
+# 从可迭代对象初始化
+d = deque([1, 2, 3, 4])
+print(d)  # deque([1, 2, 3, 4])
+
+d = deque("hello")
+print(d)  # deque(['h', 'e', 'l', 'l', 'o'])
+
+# 限制最大长度为3
+d = deque(maxlen=3)
+d.extend([1, 2, 3, 4])  # 自动丢弃最早的元素
+print(d)  # deque([2, 3, 4], maxlen=3)
+
+# 初始化时指定最大长度
+d = deque([1, 2, 3], maxlen=5)
+```
+
+#### 增删改查
+```python
+# 右端添加
+d = deque([1, 2, 3])
+d.append(4)          # 添加到右端
+print(d)             # deque([1, 2, 3, 4])
+
+d.appendright(5)     # 同上，添加到右端（实际上是 append 的别名）
+
+# 左端添加
+d = deque([1, 2, 3])
+d.appendleft(0)      # 添加到左端
+print(d)             # deque([0, 1, 2, 3])
+
+d.appendleft(-1)
+print(d)             # deque([-1, 0, 1, 2, 3])
+
+# 批量添加
+d = deque([1, 2, 3])
+d.extend([4, 5, 6])  # 从右端批量添加
+print(d)             # deque([1, 2, 3, 4, 5, 6])
+
+d.extendleft([0, -1])  # 从左端批量添加（注意顺序！）
+print(d)              # deque([-1, 0, 1, 2, 3, 4, 5, 6])
+# extendleft 是逆序添加的，相当于 for item in iterable: d.appendleft(item)
+
+# 右端删除
+d = deque([1, 2, 3, 4])
+value = d.pop()      # 从右端删除并返回
+print(value)         # 4
+print(d)             # deque([1, 2, 3])
+
+# 左端删除
+d = deque([1, 2, 3, 4])
+value = d.popleft()  # 从左端删除并返回
+print(value)         # 1
+print(d)             # deque([2, 3, 4])
+
+# 删除指定
+d = deque([1, 2, 3, 2, 4])
+d.remove(2)          # 删除第一个匹配的元素，如果要删除的元素不存在会抛异常
+print(d)             # deque([1, 3, 2, 4])
+
+# 清空
+d.clear()
+
+# 修改元素
+d = deque([1, 2, 3, 4, 5])
+
+# 通过索引修改
+d[0] = 100
+print(d)  # deque([100, 2, 3, 4, 5])
+
+d[-1] = 500
+print(d)  # deque([100, 2, 3, 4, 500])
+
+# 注意：deque 不支持切片赋值
+try:
+    d[1:3] = [200, 300]
+except TypeError as e:
+    print(f"错误: {e}")  # 'deque' object does not support item assignment
+
+# 查询元素
+d = deque([10, 20, 30, 40, 50])
+
+# 正索引（从左到右）
+print(d[0])   # 10
+print(d[2])   # 30
+print(d[-1])  # 50（最后一个元素）
+print(d[-2])  # 40（倒数第二个）
+
+# 遍历
+for item in d:
+    print(item, end=' ')  # 10 20 30 40 50
+
+# 切片（需要转换为列表）
+print(list(d)[1:3])  # [20, 30]
+
+# 旋转
+d = deque([1, 2, 3, 4, 5])
+
+d.rotate(2)   # 向右旋转2步
+print(d)      # deque([4, 5, 1, 2, 3])
+
+d.rotate(-1)  # 向左旋转1步
+print(d)      # deque([5, 1, 2, 3, 4])
+```
 ## 四.字符串操作
 ### 1.字符串创建
 ```python
