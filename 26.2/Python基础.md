@@ -32,6 +32,14 @@ none_type = None    # 空值
 
 ### 3.方法定义与参数类型
 ```python
+# 指定参数类型
+def func(a:int):
+    print(a)
+
+# 带返回值类型提示的方法
+def func(a:int) -> int:
+    return a + 1
+
 # 位置参数
 def func(a, b, c):
     return sum(a,b,c)
