@@ -748,7 +748,44 @@ print(len(s))               # 17（字符串长度）
 print(ord("a"))             # 97
 print(chr(97))              # a
 ```
+### 10.数字类型转换
+```python
+# 默认十进制
+num = int("11")
+print(nums)             # 11
 
+# 二进制（以 0b 或 0B 开头）
+num = int("11", 2)      # 二进制 11 → 十进制 3
+print(num)              # 3
+
+# 八进制（以 0o 或 0O 开头）
+num = int("11", 8)      # 八进制 11 → 十进制 9
+print(num)              # 9
+
+# 十六进制（以 0x 或 0X 开头）
+num = int("11", 16)     # 十六进制 11 → 十进制 17
+print(num)              # 17
+
+# 自动识别进制
+print(int("0b11", 0))   # 3（二进制）
+print(int("0o11", 0))   # 9（八进制）
+print(int("0x11", 0))   # 17（十六进制）
+
+# 浮点数转换
+num = float("11")
+print(num)           # 11.0
+print(type(num))     # <class 'float'>
+
+num = float("11.5")
+print(num)           # 11.5
+
+num = float("-11.25")
+print(num)           # -11.25
+
+# 科学计数法
+num = float("1.23e-4")
+print(num)           # 0.000123
+```
 ## 五.面向对象
 ### 1.类定义
 ```python
