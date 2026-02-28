@@ -882,7 +882,7 @@ if x < 0:
 class MyError(Exception):
     pass
 ```
-### 八.模块与包
+## 八.模块与包
 ```python
 # 导入整个模块
 import math
@@ -903,4 +903,27 @@ from datetime import datetime as dt
 #   subpackage/
 #     __init__.py
 #     module2.py
+```
+
+## 九.实用的内置函数
+### 1.enumerate
+```python
+# 基本用法
+fruits = ['apple', 'banana', 'orange']
+for i, fruit in enumerate(fruits):
+    print(f"索引{i}: {fruit}")
+
+# 输出：
+# 索引0: apple
+# 索引1: banana
+# 索引2: orange
+
+# 指定起始索引
+for i, fruit in enumerate(fruits, start=1):
+    print(f"第{i}个水果: {fruit}")
+
+# 输出：
+# 第1个水果: apple
+# 第2个水果: banana
+# 第3个水果: orange
 ```
