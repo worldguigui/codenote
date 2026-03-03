@@ -931,3 +931,30 @@ for i, fruit in enumerate(fruits, start=1):
 # 第2个水果: banana
 # 第3个水果: orange
 ```
+### 2.@cache
+```python
+from functools import cache
+
+@cache
+def fibonacci(n):
+    """计算斐波那契数列的第n项"""
+    print(f"正在计算 fibonacci({n})...") # 加入print，方便观察执行次数
+    if n < 2:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+# 第一次调用，会真正执行递归计算
+print(fibonacci(5))
+# 输出:
+# 正在计算 fibonacci(5)...
+# 正在计算 fibonacci(4)...
+# 正在计算 fibonacci(0)...
+# 5
+
+# 第二次用相同参数调用，所有结果都直接从缓存获取，不会执行函数体内的print语句
+print(fibonacci(5))
+# 输出: 5 
+print(fibonacci(4)) 
+# 输出: 3 
+
+```
