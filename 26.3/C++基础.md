@@ -134,16 +134,142 @@ char* str2 = "World";
 
 // C++字符串
 #include <string>
-string s1 = "Hello";
-string s2("World");
-string s3 = s1 + " " + s2;
+#include <iostream>
+#include <algorithm>
+#include <sstream>
+using namespace std;
 
-// 字符串方法
-s.length();     // 长度
-s.size();       // 大小
-s.empty();      // 是否为空
-s.substr(pos, n);  // 子串
-s.find("ll");   // 查找
+void stringBasicOperations() {
+    // 1. 构造和初始化
+    string s1;                          // 空字符串
+    string s2 = "Hello";                 // 拷贝初始化
+    string s3("World");                  // 直接初始化
+    string s4(5, 'A');                   // "AAAAA"
+    string s5(s2);                       // 拷贝构造
+    string s6(s2, 1, 3);                 // "ell" (从索引1开始取3个字符)
+    string s7 = s2 + " " + s3;           // 连接: "Hello World"
+    
+    // 2. 基本属性
+    cout << "长度: " << s2.length() << endl;      // 5
+    cout << "大小: " << s2.size() << endl;        // 5
+    cout << "容量: " << s2.capacity() << endl;    // 当前分配的存储空间
+    cout << "是否为空: " << s2.empty() << endl;   // false
+    
+    // 3. 访问字符
+    char ch1 = s2[1];                    // 'e'（不检查边界）
+    char ch2 = s2.at(1);                  // 'e'（检查边界，越界抛出异常）
+    char& first = s2.front();              // 第一个字符 'H'
+    char& last = s2.back();                // 最后一个字符 'o'
+    
+    // 4. 修改字符串
+    s2[0] = 'h';                         // "hello"
+    s2 += " C++";                         // "hello C++"
+    s2.append(" World");                   // "hello C++ World"
+    s2.push_back('!');                     // "hello C++ World!"
+    s2.insert(5, " awesome");              // 在位置5插入: "hello awesome C++ World!"
+    s2.erase(5, 8);                        // 删除从位置5开始的8个字符
+    s2.replace(6, 3, "Python");            // 替换从位置6开始的3个字符为"Python"
+    s2.clear();                            // 清空字符串
+}
+
+void stringSearchOperations() {
+    string str = "Hello C++ World C++ Programming";
+    
+    // 1. 查找子串/字符
+    size_t pos = str.find("C++");          // 从开头查找，返回6
+    if (pos != string::npos) {
+        cout << "找到C++在位置: " << pos << endl;
+    }
+    
+    // 2. 从指定位置开始查找
+    pos = str.find("C++", 10);              // 从索引10开始查找，返回17
+    
+    // 3. 反向查找（最后一次出现的位置）
+    pos = str.rfind("C++");                  // 返回17
+    
+    // 4. 查找任意字符中的第一个
+    pos = str.find_first_of("aeiou");        // 查找第一个元音，返回1('e')
+    
+    // 5. 查找不在集合中的第一个字符
+    pos = str.find_first_not_of("Hello ");   // 返回5（第一个不在"Hello "中的字符）
+    
+    // 6. 查找最后一个匹配的字符
+    pos = str.find_last_of("aeiou");         // 最后一个元音的位置
+    
+    // 7. 查找子串（从后往前）
+    pos = str.find_last_not_of("ing");       // 最后一个不在"ing"中的字符
+    
+    // 8. 检查是否包含子串 (C++23)
+    // bool contains = str.contains("World");
+    
+    cout << "查找结果位置: " << pos << " (npos = " << string::npos << ")" << endl;
+}
+
+void stringSubstringAndConversion() {
+    string str = "Hello C++ World";
+    
+    // 1. 提取子串
+    string sub1 = str.substr(6, 3);          // "C++" (从6开始取3个字符)
+    string sub2 = str.substr(6);              // "C++ World" (从6到结束)
+    
+    // 2. 转换为C风格字符串
+    const char* cstr = str.c_str();           // 返回const char*
+    char* data = str.data();                   // 返回char* (C++11起可修改)
+    
+    // 3. 数值转换 (C++11)
+    string numStr = "123";
+    int num = stoi(numStr);                    // string to int
+    long lnum = stol("456789");                 // string to long
+    float fnum = stof("3.14159");               // string to float
+    double dnum = stod("2.71828");              // string to double
+    
+    // 4. 数值转字符串
+    string s1 = to_string(123);                 // "123"
+    string s2 = to_string(3.14159);             // "3.141590"
+    
+    // 5. 字符类型判断 (需要 <cctype>)
+    char c = 'A';
+    if (isalpha(c)) cout << "是字母" << endl;
+    if (isdigit('5')) cout << "是数字" << endl;
+    if (isspace(' ')) cout << "是空白" << endl;
+    if (isupper('A')) cout << "是大写" << endl;
+    if (islower('a')) cout << "是小写" << endl;
+    
+    // 6. 大小写转换
+    char upper = toupper('a');                  // 'A'
+    char lower = tolower('B');                   // 'b'
+}
+
+void stringModification() {
+    string str = "Hello";
+    
+    // 1. 追加
+    str.append(" World");                       // "Hello World"
+    str.push_back('!');                          // "Hello World!"
+    str += " Good";                               // "Hello World! Good"
+    
+    // 2. 插入
+    str.insert(13, "Morning ");                  // 在13位置插入: "Hello World! Morning Good"
+    
+    // 3. 删除
+    str.erase(13, 8);                             // 删除从13开始的8个字符: "Hello World! Good"
+    str.pop_back();                                // 删除最后一个字符: "Hello World! Goo"
+    
+    // 4. 替换
+    str.replace(12, 3, "C++");                    // 替换从12开始的3个字符: "Hello World C++"
+    
+    // 5. 交换
+    string str2 = "ABCD";
+    str.swap(str2);                                // str = "ABCD", str2 = "Hello World C++"
+    
+    // 6. 调整大小
+    str.resize(10);                                // 保留前10个字符: "ABCD"
+    str.resize(15, '*');                           // 扩展到15个字符，新增填充'*': "ABCD***********"
+    
+    // 7. 预留空间
+    str.reserve(100);                              // 预留100字节容量
+    str.shrink_to_fit();                            // 释放多余容量 (C++11)
+}
 ```
 ## 六.指针与引用
 ### 1.指针
