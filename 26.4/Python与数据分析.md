@@ -22,6 +22,15 @@ f = open('data.txt', 'r', encoding='utf-8')
 with open('data.txt', 'r') as f:
     content = f.read()
 # 代码块结束，文件自动关闭
+
+# 打开多个文件
+folder = r'D:\\app'  # 目标目录
+
+import os
+with os.scandir(folder) as entries:
+    for entry in entries:
+        if entry.is_file(): 
+            print(f"文件: {entry.name}, 大小: {entry.stat().st_size}")
 ```
 
 **打开模式速查**：
@@ -396,20 +405,41 @@ plt.xlabel("横轴", fontproperties='PingFang HK')
 
 掌握了**一切数据操作，本质上都是在处理索引（Index）对齐**，就大概掌握了 pandas。
 
-### 1. 两大核心结构
+### 1. 两大核心结构：初始化
 
 ```python
 import pandas as pd
 import numpy as np
 
 # Series：带标签的一维数组
-s = pd.Series([3, 5, 7], index=['a', 'b', 'c'])
-s = pd.Series({'Ohio': 350, 'Texas': 710})  # 字典创建，键=索引
+s = pd.Series(['张三', 18, 1], index=['name', 'age', 'gender'])
+s = pd.Series({'name': '张三', 'age': 18, 'gender':1})  # 字典创建，键=索引
+print(s)
+"""
+name      张三
+age       18
+gender     1
+"""
 
 # DataFrame：带行列标签的二维表格
-data = {'name': ['Mayue', 'Lilin', 'Wuyun'],
-        'pay': [3000, 4500, 8000]}
+data = {'name': ['张三', '李四', '小美'],
+        'age': [18, 30, 20],
+        'gender':[1,1,2]}
 df = pd.DataFrame(data)
+print(df)
+"""
+  name  age  gender
+0   张三   18       1
+1   李四   30       1
+2   小美   20       2
+"""
+
+# DataFrame：创建只有列名的空
+df_columns = pd.DataFrame(columns=['name', 'age', 'gender'])
+print(df_columns)
+"""
+Columns: [name, age, gender]
+"""
 ```
 
 属性和方法速览：`df.index`（行索引）、`df.columns`（列索引）、`df.values`（值数组）、`df.head()`（前5行）、`df.info()`（类型概览）、`df.describe()`（数值统计摘要）。
@@ -436,7 +466,7 @@ df[['name', 'pay']]  # 返回 DataFrame
 
 # 选行（按位置或标签切片）
 df[0:3]         # 按位置
-df['a':'c']     # 按标签（包含末尾！）
+df['a':'c']     # 按标签（包含末尾）
 
 # 选区域（最常用）
 df.loc['b':'d', '语文':'英语']   # 按标签（包含末尾）
@@ -458,7 +488,7 @@ df[(df.index >= 'b') & (df.index <= 'd') & (df.数学 >= 90)]
 ```python
 df['tax'] = [0.05, 0.05, 0.1]  # 新增一列
 df.loc[5] = {'name': 'Liuxi', 'pay': 5000}  # 新增一行
-df2 = pd.concat([df1, df2])    # 或 append（拼接）
+df2 = pd.concat([df1, df2])    # 或 append（deprecated）
 ```
 
 #### 删
@@ -507,7 +537,7 @@ obj.describe()      # count, unique, top, freq
 ### 7. 排序与秩次
 ```python
 df.sort_values(by='总分')                # 按单列排序
-df.sort_values(by=['语文', '英语'])       # 多列排序
+df.sort_values(by=['语文', '英语'])       # 多列排序NO
 df.rank()                                # 返回每列的排名
 ```
 
